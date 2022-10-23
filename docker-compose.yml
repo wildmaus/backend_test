@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    build: ./
+    command: /usr/local/bin/app
+    ports:
+      - 8000:8000
+
+  db:
+    restart: always
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    ports:
+      - 5436:5432
+    volumes:
+      - ./sql/data.sql:/docker-entrypoint-initdb.d/create_tables.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 4G
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080

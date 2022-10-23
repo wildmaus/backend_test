@@ -80,6 +80,7 @@ func (s *server) getUserTx(w http.ResponseWriter, req *http.Request) {
 	}
 	by := req.FormValue("by")
 	order := req.FormValue("order")
+	offset := req.FormValue("offset")
 	if by == "" {
 		by = "date"
 	} else if by != "date" && by != "amount" {
@@ -92,8 +93,16 @@ func (s *server) getUserTx(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
+	if offset == "" {
+		offset = "0"
+	}
+	oft, err := utils.ParseUint(offset)
+	if err != nil {
+		w.WriteHeader(400)
+		return
+	}
 	log.Println(fmt.Sprintf("%v %v", by, order))
-	txs, err := s.storage.Transaction().FindTxByUser(context.TODO(), id, fmt.Sprintf("%v %v", by, order))
+	txs, err := s.storage.Transaction().FindTxByUser(context.TODO(), id, fmt.Sprintf("%v %v", by, order), oft*5)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)

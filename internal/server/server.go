@@ -3,7 +3,9 @@ package server
 import (
 	"backend_test/internal/storage"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 )
@@ -11,9 +13,14 @@ import (
 type server struct {
 	router  *mux.Router
 	storage storage.Storage
+	fs      http.Handler
 }
 
 func newServer(storage storage.Storage) *server {
+	err := os.Mkdir("/download", 0755)
+	if err != nil && !os.IsExist(err) {
+		log.Println(err)
+	}
 	s := &server{
 		router:  mux.NewRouter(),
 		storage: storage,
@@ -39,6 +46,7 @@ func (s *server) configureRouter() {
 	s.router.HandleFunc("/cancel/", s.cancel).Methods("POST", "PUT")
 
 	s.router.HandleFunc("/report/{month:[0-9]+}/{year:[0-9]+}/", s.getReport).Methods("GET")
+	s.router.HandleFunc("/download/{filename}", s.download).Methods("GET")
 }
 
 func sayhello(w http.ResponseWriter, r *http.Request) {

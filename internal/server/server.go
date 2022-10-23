@@ -30,22 +30,23 @@ func newServer(storage storage.Storage) *server {
 }
 
 func (s *server) configureRouter() {
-	s.router.StrictSlash(true)
 	s.router.HandleFunc("/", sayhello)
 
-	s.router.HandleFunc("/user/{id:[0-9]+}/", s.getBalance).Methods("GET")
-	s.router.HandleFunc("/user/{id:[0-9]+}/{amount:[0-9]+}/", s.updateUser).Methods("POST", "PUT")
-	s.router.HandleFunc("/user/{id:[0-9]+}/tx/", s.getUserTx).Methods("GET")
+	s.router.HandleFunc("/user/{id:[0-9]+}", s.getBalance).Methods("GET")
+	s.router.HandleFunc("/user/{id:[0-9]+}/{amount:[0-9]+}", s.updateUser).Methods("POST", "PUT")
 
-	s.router.HandleFunc("/transfer/{fromId:[0-9]+}/{toId:[0-9]+}/{amount:[0-9]+}/", s.transfer).Methods("POST")
+	s.router.HandleFunc("/user/{id:[0-9]+}/tx", s.getUserTx).Queries("sort_by", "{sort_by}").Queries("sort_order", "{sort_order}").Methods("GET")
+	s.router.HandleFunc("/user/{id:[0-9]+}/tx", s.getUserTx).Methods("GET")
 
-	s.router.HandleFunc("/tx/{id:[0-9]+}/", s.getTx).Methods("GET")
+	s.router.HandleFunc("/transfer/{fromId:[0-9]+}/{toId:[0-9]+}/{amount:[0-9]+}", s.transfer).Methods("POST")
 
-	s.router.HandleFunc("/reserve/", s.reserve).Methods("POST", "PUT")
-	s.router.HandleFunc("/approve/", s.approve).Methods("POST", "PUT")
-	s.router.HandleFunc("/cancel/", s.cancel).Methods("POST", "PUT")
+	s.router.HandleFunc("/tx/{id:[0-9]+}", s.getTx).Methods("GET")
 
-	s.router.HandleFunc("/report/{month:[0-9]+}/{year:[0-9]+}/", s.getReport).Methods("GET")
+	s.router.HandleFunc("/reserve", s.reserve).Methods("POST", "PUT")
+	s.router.HandleFunc("/approve", s.approve).Methods("POST", "PUT")
+	s.router.HandleFunc("/cancel", s.cancel).Methods("POST", "PUT")
+
+	s.router.HandleFunc("/report/{month:[0-9]+}/{year:[0-9]+}", s.getReport).Methods("GET")
 	s.router.HandleFunc("/download/{filename}", s.download).Methods("GET")
 }
 

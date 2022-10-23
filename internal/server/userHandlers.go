@@ -4,8 +4,10 @@ import (
 	"backend_test/internal/model"
 	"backend_test/pkg/utils"
 	"context"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -76,7 +78,22 @@ func (s *server) getUserTx(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
-	txs, err := s.storage.Transaction().FindTxByUser(context.TODO(), id)
+	by := req.FormValue("by")
+	order := req.FormValue("order")
+	if by == "" {
+		by = "date"
+	} else if by != "date" && by != "amount" {
+		w.WriteHeader(400)
+		return
+	}
+	if order == "" {
+		order = "DESC"
+	} else if strings.ToUpper(order) != "ASC" && strings.ToUpper(order) != "DESC" {
+		w.WriteHeader(400)
+		return
+	}
+	log.Println(fmt.Sprintf("%v %v", by, order))
+	txs, err := s.storage.Transaction().FindTxByUser(context.TODO(), id, fmt.Sprintf("%v %v", by, order))
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)

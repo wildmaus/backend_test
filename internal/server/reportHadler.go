@@ -40,7 +40,6 @@ func (s *server) getReport(w http.ResponseWriter, req *http.Request) {
 	output, err := os.Create(fmt.Sprintf("/download/Report-%v-%v.csv", month, year))
 	if err != nil {
 		log.Println(err)
-		log.Print("here1\n")
 		w.WriteHeader(500)
 		return
 	}
@@ -51,7 +50,6 @@ func (s *server) getReport(w http.ResponseWriter, req *http.Request) {
 	header := []string{"service id", "amount"}
 	if err := writer.Write(header); err != nil {
 		log.Println(err)
-		log.Print("here2\n")
 		w.WriteHeader(500)
 		return
 	}
@@ -60,7 +58,6 @@ func (s *server) getReport(w http.ResponseWriter, req *http.Request) {
 		csvRow = append(csvRow, fmt.Sprint(val.ServiseId), fmt.Sprint(val.Amount))
 		if err := writer.Write(csvRow); err != nil {
 			log.Println(err)
-			log.Print("here3\n")
 			w.WriteHeader(500)
 			return
 		}

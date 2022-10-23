@@ -27,7 +27,7 @@ func (r *TxRepository) FindOne(ctx context.Context, id int32) (model.Transaction
 	return tx, nil
 }
 
-func (r *TxRepository) FindTxByUser(ctx context.Context, id int32) ([]model.Transaction, error) {
+func (r *TxRepository) FindTxByUser(ctx context.Context, id int32, sort_param string) ([]model.Transaction, error) {
 	q := `
 		WITH tx AS
 		(SELECT * FROM transactions
@@ -35,7 +35,9 @@ func (r *TxRepository) FindTxByUser(ctx context.Context, id int32) ([]model.Tran
 		SELECT tx.id, fromId, toId, amount, date, type, orderid, serviceid
 		FROM tx
 		LEFT JOIN details ON detailsid = details.id
+		ORDER BY
 	`
+	q += sort_param
 	rows, err := r.client.Query(ctx, q, id)
 	if err != nil {
 		return nil, err

@@ -6,30 +6,17 @@ import (
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/gorilla/mux"
 )
 
 func (s *server) transfer(w http.ResponseWriter, req *http.Request) {
 	log.Printf("handling transfer at %s\n", req.URL.Path)
-	fromId, err := utils.ParseUint(mux.Vars(req)["fromId"])
+	params, err := utils.ParseUintMass(req, "fromId", "toId", "amount")
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(400)
 		return
 	}
-	toId, err := utils.ParseUint(mux.Vars(req)["toId"])
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(400)
-		return
-	}
-	amount, err := utils.ParseUint(mux.Vars(req)["amount"])
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(400)
-		return
-	}
+	fromId, toId, amount := params[0], params[1], params[2]
 	from, err := s.storage.User().FindOne(req.Context(), fromId)
 	if err != nil {
 		log.Println(err)

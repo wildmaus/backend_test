@@ -14,18 +14,13 @@ import (
 
 func (s *server) updateUser(w http.ResponseWriter, req *http.Request) {
 	log.Printf("handling update user at %s\n", req.URL.Path)
-	id, err := utils.ParseUint(mux.Vars(req)["id"])
+	params, err := utils.ParseUintMass(req, "id", "amount")
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(400)
 		return
 	}
-	amount, err := utils.ParseUint(mux.Vars(req)["amount"])
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(400)
-		return
-	}
+	id, amount := params[0], params[1]
 	user, err := s.storage.User().FindOne(req.Context(), id)
 	var create bool
 	if err != nil {
@@ -77,34 +72,42 @@ func (s *server) getUserTx(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
-	by := req.FormValue("by")
-	order := req.FormValue("order")
-	page := req.FormValue("page")
-	if by == "" {
-		by = "date"
-	} else if by != "date" && by != "amount" {
-		w.WriteHeader(400)
-		return
-	}
-	if order == "" {
-		order = "DESC"
-	} else if strings.ToUpper(order) != "ASC" && strings.ToUpper(order) != "DESC" {
-		w.WriteHeader(400)
-		return
-	}
-	if page == "" {
-		page = "0"
-	}
-	offset, err := utils.ParseUint(page)
+	sortPrm, offset, err := parseQuery(req)
 	if err != nil {
+		log.Println(err)
 		w.WriteHeader(400)
 		return
 	}
-	txs, err := s.storage.Transaction().FindTxByUser(req.Context(), id, fmt.Sprintf("%v %v", by, order), offset*5)
+	txs, err := s.storage.Transaction().FindTxByUser(req.Context(), id, sortPrm, offset)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
 		return
 	}
 	utils.RenderJson(w, ResponseTx{Transactions: txs})
+}
+
+// get sort params and offset number
+func parseQuery(req *http.Request) (string, int32, error) {
+	by := req.FormValue("by")
+	order := req.FormValue("order")
+	page := req.FormValue("page")
+	if by == "" {
+		by = "date"
+	} else if by != "date" && by != "amount" {
+		return "", 0, errWrongInputData
+	}
+	if order == "" {
+		order = "DESC"
+	} else if strings.ToUpper(order) != "ASC" && strings.ToUpper(order) != "DESC" {
+		return "", 0, errWrongInputData
+	}
+	if page == "" {
+		page = "0"
+	}
+	offset, err := utils.ParseUint(page)
+	if err != nil {
+		return "", 0, errWrongInputData
+	}
+	return fmt.Sprintf("%v %v", by, order), offset * 5, nil
 }

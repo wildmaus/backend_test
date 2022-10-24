@@ -16,16 +16,12 @@ func (s *server) getReport(w http.ResponseWriter, req *http.Request) {
 		Report string `json:"report"`
 	}
 	log.Printf("handling get report at %s\n", req.URL.Path)
-	month, err := utils.ParseUint(mux.Vars(req)["month"])
+	params, err := utils.ParseUintMass(req, "month", "year")
 	if err != nil {
 		w.WriteHeader(400)
 		return
 	}
-	year, err := utils.ParseUint(mux.Vars(req)["year"])
-	if err != nil {
-		w.WriteHeader(400)
-		return
-	}
+	month, year := params[0], params[1]
 	if month > 12 || month < 1 {
 		w.WriteHeader(400)
 		return

@@ -6,6 +6,8 @@ services:
     command: /usr/local/bin/app
     ports:
       - 8000:8000
+    depends_on:
+      - db
 
   db:
     restart: always

@@ -2,7 +2,6 @@ package server
 
 import (
 	"backend_test/internal/model"
-	"context"
 	"encoding/json"
 	"errors"
 	"log"
@@ -32,7 +31,7 @@ func (s *server) reserve(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
-	user, err := s.storage.User().FindOne(context.TODO(), request.Id)
+	user, err := s.storage.User().FindOne(req.Context(), request.Id)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(404)
@@ -47,7 +46,7 @@ func (s *server) reserve(w http.ResponseWriter, req *http.Request) {
 	user.Reserved += request.Amount
 	tx := model.TransactionDto{FromId: &request.Id, Amount: request.Amount, Date: time.Now(), Type: 2}
 	details := model.Details{OrderId: request.OrderId, ServiceId: request.ServiceId, Status: false}
-	if err := s.storage.Details().Reserve(context.TODO(), &user, &tx, &details); err != nil {
+	if err := s.storage.Details().Reserve(req.Context(), &user, &tx, &details); err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
 		return
@@ -74,7 +73,7 @@ func (s *server) checkReserved(r *requestReserve, w http.ResponseWriter, req *ht
 		return
 	}
 	// find row with details
-	details, err := s.storage.Details().FindOne(context.TODO(), r.OrderId, r.ServiceId)
+	details, err := s.storage.Details().FindOne(req.Context(), r.OrderId, r.ServiceId)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(404)
@@ -86,7 +85,7 @@ func (s *server) checkReserved(r *requestReserve, w http.ResponseWriter, req *ht
 		return
 	}
 	// find tx by userId, type and detailsId
-	amount, err := s.storage.Transaction().FindByDetails(context.TODO(), r.Id, details.Id)
+	amount, err := s.storage.Transaction().FindByDetails(req.Context(), r.Id, details.Id)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(404)
@@ -98,7 +97,7 @@ func (s *server) checkReserved(r *requestReserve, w http.ResponseWriter, req *ht
 		return
 	}
 	// get user and recalculate reserved
-	user, err := s.storage.User().FindOne(context.TODO(), r.Id)
+	user, err := s.storage.User().FindOne(req.Context(), r.Id)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(404)
@@ -124,7 +123,7 @@ func (s *server) checkReserved(r *requestReserve, w http.ResponseWriter, req *ht
 		// from = id, to = null
 		tx = model.TransactionDto{FromId: &r.Id, Amount: r.Amount, Date: time.Now(), Type: 4, DetailsId: &details.Id}
 	}
-	if err := s.storage.Details().SolveReserve(context.TODO(), &user, &tx); err != nil {
+	if err := s.storage.Details().SolveReserve(req.Context(), &user, &tx); err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
 		return

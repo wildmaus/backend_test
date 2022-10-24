@@ -12,5 +12,6 @@ func RenderJson(w http.ResponseWriter, v interface{}) {
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
 	w.Write(js)
 }

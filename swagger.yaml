@@ -1,0 +1,458 @@
+openapi: 3.0.3
+info:
+  title: Backend test
+  description: |-
+   This is simple rest api server written with golang and postgressql.
+   
+   Git: [github.com](http://github.com/wildmaus/backend_test)
+  version: '1.0'
+servers:
+  - url: http://127.0.0.1:8000/
+  - url: http://localhost:8000/
+tags:
+  - name: user
+    description: All about user
+  - name: reserve
+    description: Reserve and then cancel or approve that
+  - name: report
+    description: Prepare report
+  - name: transaction
+    description: Find current transaction
+paths:
+  /user/{id}/{amount}:
+    post:
+      tags:
+        - user
+      summary: Create user or update if it already exist
+      description: Create user or update if it already exist
+      operationId: createUser
+      parameters:
+        - name: id
+          in: path
+          description: The user id, uint
+          required: true
+          schema:
+            type: integer
+        - name: amount
+          in: path
+          description: The initial or additional amount of user, uint
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: successfully update user
+        '400':
+          description: wrong input
+        '500':
+          description: create transaction fails
+    put:
+      tags:
+        - user
+      summary: Create user or update if it already exist
+      description: Create user or update if it already exist
+      operationId: updateUser
+      parameters:
+        - name: id
+          in: path
+          description: The user id, uint
+          required: true
+          schema:
+            type: integer
+        - name: amount
+          in: path
+          description: The initial or additional amount of user, uint
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: successfully update user
+        '400':
+          description: wrong input
+        '500':
+          description: create transaction fails
+  /user/{id}:
+    get:
+      tags:
+        - user
+      summary: Return user's balance
+      description: Return user's balance
+      operationId: getBalance
+      parameters:
+        - name: id
+          in: path
+          description: The user id, uint
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Wrong input
+        '404':
+          description: Don't find user with such id
+  /user/{id}/tx:
+    get:
+      tags:
+        - user
+      summary: Return list of user's transactions (5 rows)
+      description: Return list of user's transactions (5 rows)
+      operationId: getUserTx
+      parameters:
+        - name: id
+          in: path
+          description: The user id, uint
+          required: true
+          schema:
+            type: integer
+        - name: by
+          in: query
+          description: By which parameter to sort
+          required: false
+          schema:
+            type: string
+            default: date
+            enum:
+             - date
+             - amount
+        - name: order
+          in: query
+          description: By which order to sort
+          required: false
+          schema:
+            type: string
+            default: DESC
+            enum:
+             - DESC
+             - ASC
+        - name: page
+          in: query
+          description: Which page is being requested, uint
+          required: false
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserTransactions'
+        '400':
+          description: Invalid input params
+        '500':
+          description: Quary to db fails
+  /transfer/{fromId}/{toId}/{amount}:
+    post:
+      tags:
+        - user
+      summary: Transfer amount from one user to another
+      description: Transfer amount from one user to another, if recipient doesn't exist then create new one
+      operationId: transfer
+      parameters:
+        - name: fromId
+          in: path
+          description: The sender id, uint
+          required: true
+          schema:
+            type: integer
+        - name: toId
+          in: path
+          description: The recipient id, uint
+          required: true
+          schema:
+            type: integer
+        - name: amount
+          in: path
+          description: Sended amount
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Successful operation
+        '400':
+          description: Invalid input params
+        '404':
+          description: Sender doesn't exist
+        '500':
+          description: Quary to db fails
+  /tx/{id}:
+    get:
+      tags:
+        - transaction
+      summary: Get one transaction
+      description: Get one transaction
+      operationId: tx
+      parameters:
+        - name: id
+          in: path
+          description: The transaction id, uint
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tx'
+        '400':
+          description: Invalid input params
+        '404':
+          description: Transaction doesn't exist
+  /report/{month}/{year}:
+    get:
+        tags:
+          - report
+        summary: Return report for current month
+        description: Generate report for current month in csv and return linc for download it 
+        operationId: report
+        parameters:
+          - name: month
+            in: path
+            description: Month = 1-12
+            required: true
+            schema:
+              type: integer
+          - name: year
+            in: path
+            description: Report year, uint
+            required: true
+            schema:
+              type: integer
+        responses:
+          '200':
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Report'
+          '400':
+            description: Invalid input params
+          '500':
+            description: Quary to db or generating csv fails
+  /download/{filename}:
+    get:
+      tags:
+        - report
+      summary: Send report.csv
+      operationId: download
+      parameters:
+        - name: filename
+          in: path
+          description: name of generated file
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Send file
+          content:
+            text/csv: {}
+        '404':
+          description: Invalid filename
+  /reserve:
+    post:
+      tags:
+        - reserve
+      summary: Reserve money from user
+      operationId: reserve
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReserveRequest'
+      responses:
+          '204':
+            description: Successful operation
+          '400':
+            description: Invalid input params
+          '404':
+            description: Not found user with input params
+          '500':
+            description: Quary to db or generating csv fails
+  /approve:
+    post:
+      tags:
+        - reserve
+      summary: Approve reserved money from user, add them into report
+      operationId: approve
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReserveRequest'
+      responses:
+          '204':
+            description: Successful operation
+          '400':
+            description: Invalid input params
+          '404':
+            description: Not found user, details or transaction with input params
+          '500':
+            description: Quary to db or generating csv fails
+  /cancel:
+    post:
+      tags:
+        - reserve
+      summary: Cancel reserve and return user's money
+      operationId: cancel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReserveRequest'
+      responses:
+          '204':
+            description: Successful operation
+          '400':
+            description: Invalid input params
+          '404':
+            description: Not found user, details or transaction with input params
+          '500':
+            description: Quary to db fails
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          example: 10
+        balance:
+          type: integer
+          format: int32
+          example: 3333
+      xml:
+        name: user
+    Usertx:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          example: 1
+        fromId:
+          type: integer
+          format: int32
+          example: 1
+          description: may be null
+        toId:
+          type: integer
+          format: int32
+          example: 2
+          description: may be null
+        amount:
+          type: integer
+          format: int32
+          example: 1000
+        date:
+          type: string
+          example: 2022-10-23
+        type:
+          type: integer
+          format: int32
+          example: 2
+          description: 0-4
+        orderId:
+          type: integer
+          format: int32
+          example: 12
+          description: may be null
+        serviceId:
+          type: integer
+          format: int32
+          example: 2
+          description: may be null
+      xml:
+        name: usertx
+    UserTransactions:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Usertx"
+      xml:
+        name: userTxs
+    Tx:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          example: 1
+        fromId:
+          type: integer
+          format: int32
+          example: 1
+          description: may be null
+        toId:
+          type: integer
+          format: int32
+          example: 2
+          description: may be null
+        amount:
+          type: integer
+          format: int32
+          example: 1000
+        date:
+          type: string
+          example: 2022-10-23
+        type:
+          type: integer
+          format: int32
+          example: 2
+          description: 0-4
+        detailsId:
+          type: integer
+          format: int32
+          example: 12
+          description: may be null
+      xml:
+        name: tx
+    Report:
+      type: object
+      properties:
+        report:
+          type: string
+          example: http://localhost:8000/download/Report-10-2022.csv
+    ReserveRequest:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int32
+          example: 1
+        orderId:
+          type: integer
+          format: int32
+          example: 12
+        serviceId:
+          type: integer
+          format: int32
+          example: 2
+        amount:
+          type: integer
+          format: int32
+          example: 1500
+      xml:
+        name: reserveRequest
+  
+  requestBodies:
+    Reserve:
+      description: Info about reserve
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReserveRequest'

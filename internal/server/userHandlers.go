@@ -3,7 +3,6 @@ package server
 import (
 	"backend_test/internal/model"
 	"backend_test/pkg/utils"
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -27,7 +26,7 @@ func (s *server) updateUser(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
-	user, err := s.storage.User().FindOne(context.TODO(), id)
+	user, err := s.storage.User().FindOne(req.Context(), id)
 	var create bool
 	if err != nil {
 		user = model.User{Id: id, Balance: amount, Reserved: 0}
@@ -41,7 +40,7 @@ func (s *server) updateUser(w http.ResponseWriter, req *http.Request) {
 		create = false
 	}
 	tx := model.TransactionDto{ToId: &id, Amount: amount, Date: time.Now(), Type: 0}
-	if err := s.storage.User().CreateWithTx(context.TODO(), &user, &tx, create); err != nil {
+	if err := s.storage.User().CreateWithTx(req.Context(), &user, &tx, create); err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
 		return
@@ -57,14 +56,14 @@ func (s *server) getBalance(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
-	user, err := s.storage.User().FindOne(context.TODO(), id)
+	user, err := s.storage.User().FindOne(req.Context(), id)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(404)
 		return
 	}
-	w.WriteHeader(200)
 	utils.RenderJson(w, model.UserDto{Id: user.Id, Balance: user.Balance})
+	w.WriteHeader(200)
 }
 
 func (s *server) getUserTx(w http.ResponseWriter, req *http.Request) {
@@ -80,7 +79,7 @@ func (s *server) getUserTx(w http.ResponseWriter, req *http.Request) {
 	}
 	by := req.FormValue("by")
 	order := req.FormValue("order")
-	offset := req.FormValue("offset")
+	page := req.FormValue("page")
 	if by == "" {
 		by = "date"
 	} else if by != "date" && by != "amount" {
@@ -93,21 +92,19 @@ func (s *server) getUserTx(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
-	if offset == "" {
-		offset = "0"
+	if page == "" {
+		page = "0"
 	}
-	oft, err := utils.ParseUint(offset)
+	offset, err := utils.ParseUint(page)
 	if err != nil {
 		w.WriteHeader(400)
 		return
 	}
-	log.Println(fmt.Sprintf("%v %v", by, order))
-	txs, err := s.storage.Transaction().FindTxByUser(context.TODO(), id, fmt.Sprintf("%v %v", by, order), oft*5)
+	txs, err := s.storage.Transaction().FindTxByUser(req.Context(), id, fmt.Sprintf("%v %v", by, order), offset*5)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
 		return
 	}
-	w.WriteHeader(200)
 	utils.RenderJson(w, ResponseTx{Transactions: txs})
 }

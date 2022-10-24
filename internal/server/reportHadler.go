@@ -2,7 +2,6 @@ package server
 
 import (
 	"backend_test/pkg/utils"
-	"context"
 	"encoding/csv"
 	"fmt"
 	"log"
@@ -31,7 +30,7 @@ func (s *server) getReport(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
-	report, err := s.storage.Transaction().GetReport(context.TODO(), month, year)
+	report, err := s.storage.Transaction().GetReport(req.Context(), month, year)
 	if err != nil {
 		log.Print(err)
 		w.WriteHeader(500)
@@ -62,7 +61,6 @@ func (s *server) getReport(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
-	w.WriteHeader(200)
 	utils.RenderJson(w, ResponseReport{Report: fmt.Sprintf("http://localhost:8000/download/Report-%v-%v.csv", month, year)})
 }
 

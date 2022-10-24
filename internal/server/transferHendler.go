@@ -3,7 +3,6 @@ package server
 import (
 	"backend_test/internal/model"
 	"backend_test/pkg/utils"
-	"context"
 	"log"
 	"net/http"
 	"time"
@@ -31,7 +30,7 @@ func (s *server) transfer(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
-	from, err := s.storage.User().FindOne(context.TODO(), fromId)
+	from, err := s.storage.User().FindOne(req.Context(), fromId)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(404)
@@ -42,7 +41,7 @@ func (s *server) transfer(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	from.Balance -= amount
-	to, err := s.storage.User().FindOne(context.TODO(), toId)
+	to, err := s.storage.User().FindOne(req.Context(), toId)
 	var create bool
 	if err != nil {
 		create = true
@@ -56,7 +55,7 @@ func (s *server) transfer(w http.ResponseWriter, req *http.Request) {
 		to.Balance += amount
 	}
 	tx := model.TransactionDto{FromId: &fromId, ToId: &toId, Amount: amount, Date: time.Now(), Type: 1}
-	if err := s.storage.Transaction().Transfer(context.TODO(), &from, &to, &tx, create); err != nil {
+	if err := s.storage.Transaction().Transfer(req.Context(), &from, &to, &tx, create); err != nil {
 		log.Println(err)
 		w.WriteHeader(500)
 		return

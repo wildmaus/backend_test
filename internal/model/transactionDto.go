@@ -9,5 +9,5 @@ type TransactionDto struct {
 	Amount    int32     `json:"amount"`
 	Date      time.Time `json:"date"`
 	Type      int32     `json:"type"`
-	DetailsId *int32    `json:"details"`
+	DetailsId *int32    `json:"detailsId"`
 }

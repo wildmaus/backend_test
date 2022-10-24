@@ -2,7 +2,6 @@ package server
 
 import (
 	"backend_test/pkg/utils"
-	"context"
 	"log"
 	"net/http"
 
@@ -16,11 +15,10 @@ func (s *server) getTx(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(400)
 		return
 	}
-	tx, err := s.storage.Transaction().FindOne(context.TODO(), id)
+	tx, err := s.storage.Transaction().FindOne(req.Context(), id)
 	if err != nil {
 		w.WriteHeader(404)
 		return
 	}
-	w.WriteHeader(200)
 	utils.RenderJson(w, tx)
 }

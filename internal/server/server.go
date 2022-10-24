@@ -34,10 +34,8 @@ func (s *server) configureRouter() {
 
 	s.router.HandleFunc("/user/{id:[0-9]+}", s.getBalance).Methods("GET")
 	s.router.HandleFunc("/user/{id:[0-9]+}/{amount:[0-9]+}", s.updateUser).Methods("POST", "PUT")
-
-	s.router.HandleFunc("/user/{id:[0-9]+}/tx", s.getUserTx).Queries("sort_by", "{sort_by}", "sort_order", "{sort_order}", "offset", "offser{[0-9]+}").Methods("GET")
+	s.router.HandleFunc("/user/{id:[0-9]+}/tx", s.getUserTx).Queries("sort_by", "{sort_by}", "sort_order", "{sort_order}", "page", "{[0-9]+}").Methods("GET")
 	s.router.HandleFunc("/user/{id:[0-9]+}/tx", s.getUserTx).Methods("GET")
-
 	s.router.HandleFunc("/transfer/{fromId:[0-9]+}/{toId:[0-9]+}/{amount:[0-9]+}", s.transfer).Methods("POST")
 
 	s.router.HandleFunc("/tx/{id:[0-9]+}", s.getTx).Methods("GET")

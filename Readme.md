@@ -1,5 +1,6 @@
 # Backend test
-Простой rest api сервер на Go и Psql.
+Простой rest api сервер на Go и Psql.    
+Api описан в файле swagger.yaml.
 ### Commands
 Для запуска сервера (скачает postgressql image и создаст image для go app):
 ```bash
